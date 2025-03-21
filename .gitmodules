@@ -1,0 +1,9 @@
+[submodule "eureka-server"]
+	path = eureka-server
+	url = https://github.com/AbaSheger/eureka-server.git
+[submodule "api-gateway"]
+	path = api-gateway
+	url = https://github.com/AbaSheger/api-gateway.git
+[submodule "wigell-padel"]
+	path = wigell-padel
+	url = https://github.com/AbaSheger/wigell-padel.git

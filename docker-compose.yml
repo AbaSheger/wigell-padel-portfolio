@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: wigellsdb
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - wigell-network
+
+  wigell-padel:
+    build: ./wigell-padel/wigell-padel
+    image: wigell-padel:latest
+    ports:
+      - "8584:8584"
+    volumes:
+      - ./wigell-padel/logs:/logs
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wigellsdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - wigell-network
+
+  eureka-server:
+    build: ./eureka-server/eureka-server
+    image: eureka-server:latest
+    ports:
+      - "8761:8761"
+    networks:
+      - wigell-network
+
+  api-gateway:
+    build: ./api-gateway/api-gateway
+    image: api-gateway:latest
+    ports:
+      - "8585:8585"
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
+    networks:
+      - wigell-network
+
+networks:
+  wigell-network:
+    driver: bridge
